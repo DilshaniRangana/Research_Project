@@ -1,0 +1,6 @@
+﻿  Research_1.cpp
+d:\visual_studio_workspace\research_1\research_1\research_1.cpp(73): warning C4018: '<': signed/unsigned mismatch
+d:\visual_studio_workspace\research_1\research_1\research_1.cpp(75): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+d:\visual_studio_workspace\research_1\research_1\research_1.cpp(76): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+  Research_1.vcxproj -> D:\Visual_Studio_Workspace\Research_1\Debug\Research_1.exe
+  Research_1.vcxproj -> D:\Visual_Studio_Workspace\Research_1\Debug\Research_1.pdb (Full PDB)
