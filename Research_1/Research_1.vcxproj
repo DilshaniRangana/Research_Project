@@ -94,7 +94,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Visual_Studio_Workspace\opencv\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_core2413d.lib;opencv_highgui2413d.lib;opencv_imgproc2413d.lib;opencv_calib3d2413d.lib;opencv_ml2413d.lib;opencv_objdetect2413d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_core2413d.lib;opencv_highgui2413d.lib;opencv_imgproc2413d.lib;opencv_calib3d2413d.lib;opencv_ml2413d.lib;opencv_objdetect2413d.lib;opencv_video2413d.lib;opencv_videostab2413d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -152,6 +152,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="grabCut.cpp" />
+    <ClCompile Include="mog2.cpp" />
     <ClCompile Include="Research_1.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
