@@ -8,6 +8,7 @@ using namespace cv;
 using namespace std;
 void addto_map(int B, int G, int R);
 static map<string, int> BGRValues;
+static int Person_Color[2][3] = { {224,224,160},{ 32,32,32 } };
 
 
 void addto_map(int B, int G, int R)
@@ -96,6 +97,7 @@ void detectContours(Mat contur)
 	findContours(gray, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
 	//imshow("Contours ", gray);
 }
+
 
 int main()
 {
@@ -216,7 +218,7 @@ int main()
 			for (int i = 0; i < crop.rows; i++)
 			{
 				int left = 0, right = 0, lvalidate = 0, rvalidate = 0;vector<int> v;
-				for (int j = 0, k = crop.cols - 1; j < crop.cols / 2; j++, k--) 
+				for (int j = 0, k = crop.cols - 1; j <= crop.cols / 2; j++, k--) 
 				{
 					
 					int B = crop.at<cv::Vec3b>(i, j)[0];
@@ -256,14 +258,54 @@ int main()
 					}
 
 				}
+				if (lvalidate == 0 && rvalidate == 1)
+				{
+					
+					boundry[i][0] = right;
 
+				}
+				if (rvalidate == 0 && lvalidate == 1)
+				{
+					boundry[i][1] = left;
+
+				}
 
 			}
 
+			//find width to height ratio;
+
+			int totwidth = 0, num=0;
+			int h1 = 0, h2 = 0;
+			for (int i = 0; i < crop.rows; i++)
+			{
+				
+
+				if (boundry[i][0]>= 0 || boundry[i][1]<=crop.cols)
+				{
+					h2 = i;
+					if (h1==0)
+					{
+						h1 = i;
+					}
+					totwidth += (boundry[i][1] - boundry[i][0]);
+					num++;
+
+				}
+			}
+
+			int avgWidth = totwidth / num;
+			int height = h2 - h1;
+			float w2h = (float)avgWidth / (float)height;
+
+			cout << avgWidth << ":" << height << ":" << w2h << endl;
+
+
+			//end of find width to height ratio;
+
 
 			//find maximum colors
-			int max1 = 0, max2 = 1, max3 = 0;
-			string element[3];
+			int max1 = 0, max2 = 1, max3 = 0,max4=0;
+			string element[4];
 
 			for (auto elem : BGRValues)
 			{
@@ -271,10 +313,12 @@ int main()
 				string index = elem.first;
 				if (max1 < value)
 				{
+					max4 = max3;
 					max3 = max2;
 					max2 = max1;
 					max1 = value;
 
+					element[3] = element[2];
 					element[2] = element[1];
 					element[1] = element[0];
 					element[0]  = index;
@@ -282,36 +326,50 @@ int main()
 				}
 				else if (max2 < value)
 				{
+					max4 = max3;
 					max3 = max2;
 					max2 = value;
 
+					element[3] = element[2];
 					element[2] = element[1];
 					element[1] = index;
 
 				}
 				else if (max3< value)
 				{
+					max4 = max3;
 					max3 = value;
 
+					element[3] = element[2];
 					element[2] = index;
+
+				}
+				else if (max4< value)
+				{
+					max4 = value;
+					element[3] = index;
 
 				}
 
 
 			}
 
-			cout << " max 1 " << element[0] << " " << max1 << " max 2 " << element[1] << " " << max2 << " max 3 " << element[2] << " " << max3 << endl;
+			cout << " max 1 " << element[0] << " " << max1 << " max 2 " << element[1] << " " << max2 << " max 3 " << element[2] << " " << max3 << " max 4 " << element[3] << endl;
 			
 			
 
 			//detect contours
 
 			
-			int maxColors [3][3];
+			int maxColors [4][3];
 			
 
+			
+
+
+
 			//convert colors to rgb values
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < 4; i++)
 			{
 				istringstream iss(element[i]);
 				string s;
@@ -324,162 +382,193 @@ int main()
 				}
 			}
 			
-			int colorRange[3][3][2];
-			
-			
-			
-			Mat bin1[3];
-			Rect rectangles[3];
+			int colorRange[4][3][2];
 
-			//process single image
-			for (int i = 0; i < size(bin1); i++)
+			bool ok1 = false;
+			bool ok2 = false;
+			for (int i = 0; i < 4; i++)
 			{
-				
-				//find the range for one color
-				for (int j = 0; j <3 ; j++)
-				{
-					int color = maxColors[i][j];
-					colorRange[i][j][0] = findMin(color);
-					colorRange[i][j][1] = findMax(color);
 
+				if ((maxColors[i][0] == Person_Color[0][0] && maxColors[i][1] == Person_Color[0][1] && maxColors[i][2] == Person_Color[0][2]) || (maxColors[i][0] == Person_Color[1][0] && maxColors[i][1] == Person_Color[1][1] && maxColors[i][2] == Person_Color[1][2]))
+				{
+					if (ok1)
+					{
+						ok2 = true;
+
+					}
+					else
+					{
+						ok1 = true;
+					}
 				}
 
+			}
 
-				//extract the color binary
-				inRange(crop, Scalar(colorRange[i][0][0], colorRange[i][1][0], colorRange[i][2][0]), Scalar(colorRange[i][0][1], colorRange[i][1][1], colorRange[i][2][1]),bin1[i]);
+			cout << "image content " << ok1 << " " << ok2 << endl;
 
+			if (ok1 && ok2)
+			{
 
-				imshow("one color ", bin1[i]);
+				Mat bin1[3];
+				Rect rectangles[3];
 
-				vector<vector<Point> > contours;
-				vector<Vec4i> hierarchy;
+				//process single image
 
-				//
-				findContours(bin1[i], contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-
-				/// Approximate contours to polygons + get bounding rects and circles
-				vector<vector<Point> > contours_poly(contours.size());
-				vector<Rect> boundRect(contours.size());
-				vector<Point2f>center(contours.size());
-				vector<float>radius(contours.size());
-
-				Rect maximum_rect;
-				int size = 0;
-				int index;
-				Mat drawing = Mat::zeros(bin1[i].size(), CV_8UC3);
-				for (int k = 0; k < contours.size(); k++)
+				for (int i = 0; i < 2; i++)
 				{
-					approxPolyDP(Mat(contours[k]), contours_poly[k], 3, true);
-					boundRect[k] = boundingRect(Mat(contours_poly[k]));
-					if (size< boundRect[k].area())
+
+					//find the range for one color
+					for (int j = 0; j <3; j++)
 					{
-						size = boundRect[k].area();
-						index = k;
+						int color = Person_Color[i][j];
+						colorRange[i][j][0] = findMin(color);
+						colorRange[i][j][1] = findMax(color);
+
 					}
 
-					cout << boundRect[k].area() << endl;
-					
-					
-					
-				}
-				//draw the rectangle
-				rectangles[i] = boundRect[index];
-				rectangle(drawing, boundRect[index].tl(), boundRect[index].br(), Scalar(0, 255, 0), 2, 8, 0);
-				imshow("rect ",drawing);
-				waitKey(0);
-				
-			
+
+					//extract the color binary
+					inRange(crop, Scalar(colorRange[i][0][0], colorRange[i][1][0], colorRange[i][2][0]), Scalar(colorRange[i][0][1], colorRange[i][1][1], colorRange[i][2][1]), bin1[i]);
 
 
-				
+					imshow("one color ", bin1[i]);
 
-				cout << maxColors[i][2] << "," << maxColors[i][1] << "," << maxColors[i][0] << endl;
+					vector<vector<Point> > contours;
+					vector<Vec4i> hierarchy;
 
-				
-				/*imshow("test", bin);
-				waitKey(0);
-				Mat crop1;*/
+					//
+					findContours(bin1[i], contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
-				/*for (int i = 0; i < crop.rows; i++)
-				{
+					/// Approximate contours to polygons + get bounding rects and circles
+					vector<vector<Point> > contours_poly(contours.size());
+					vector<Rect> boundRect(contours.size());
+					vector<Point2f>center(contours.size());
+					vector<float>radius(contours.size());
+
+					Rect maximum_rect;
+					int size = 0;
+					int index;
+					Mat drawing = Mat::zeros(bin1[i].size(), CV_8UC3);
+					for (int k = 0; k < contours.size(); k++)
+					{
+						approxPolyDP(Mat(contours[k]), contours_poly[k], 3, true);
+						boundRect[k] = boundingRect(Mat(contours_poly[k]));
+						if (size< boundRect[k].area())
+						{
+							size = boundRect[k].area();
+							index = k;
+						}
+
+						//	cout << boundRect[k].area() << endl;
+
+
+
+					}
+					//draw the rectangle
+					rectangles[i] = boundRect[index];
+					rectangle(drawing, boundRect[index].tl(), boundRect[index].br(), Scalar(0, 255, 0), 2, 8, 0);
+					imshow("rect ", drawing);
+					waitKey(0);
+
+
+
+
+
+
+					cout << Person_Color[i][2] << "," << Person_Color[i][1] << "," << Person_Color[i][0] << endl;
+
+
+					/*imshow("test", bin);
+					waitKey(0);
+					Mat crop1;*/
+
+					/*for (int i = 0; i < crop.rows; i++)
+					{
 					int l = boundry[i][0];
 					int r = boundry[i][1];
 					if (l<0 || l>crop.cols)
 					{
-						l = 0;
+					l = 0;
 					}
 					if (r<0 || r> crop.cols)
 					{
-						r = crop.cols - 1;
+					r = crop.cols - 1;
 					}
-					
+
+
+
+					}
+
+					imshow("crop segment", crop);*/
+
+				}
+
+				int xCordinates[3];
+				int yCordinates[3];
+				int maxX = 0, xind;
+				int maxY = 0, yind;
+
+				for (int i = 0; i < size(rectangles); i++)
+				{
+					xCordinates[i] = rectangles[i].tl().x;
+					if (maxX < rectangles[i].tl().x)
+					{
+						maxX = rectangles[i].tl().x;
+						xind = i;
+					}
+
+					if (maxY < rectangles[i].tl().y)
+					{
+						maxY = rectangles[i].tl().y;
+						yind = i;
+					}
+
+
+					yCordinates[i] = rectangles[i].tl().y;
+				}
+
+
+
+				//upperbody color
+				int Lb = Person_Color[yind][0];
+				int Lg = Person_Color[yind][1];
+				int Lr = Person_Color[yind][2];
+
+				cout << "lower body color " << Lb << "," << Lg << "," << Lr << endl;
+				Mat img(500, 500, CV_8UC3);
+				img = cv::Scalar(Lb, Lg, Lr);
+				imshow("Lower body ", img);
+
+				int upper = 2;
+				if (yind == 0)
+				{
+					upper = 1;
+				}
+				else
+				{
+					upper = 0;
+				}
+
+				 Lb = Person_Color[upper][0];
+				 Lg = Person_Color[upper][1];
+				 Lr = Person_Color[upper][2];
 
 				
-				}
+				Mat img1(500, 500, CV_8UC3);
+				img1 = cv::Scalar(Lb, Lg, Lr);
+				imshow("Upper body ", img1);
+				
 
-				imshow("crop segment", crop);*/
 
 			}
-			
-			int xCordinates[3];
-			int yCordinates[3];
-			int maxX = 0 , xind;
-			int maxY = 0 , yind;
-
-			for (int i = 0; i < size(rectangles); i++)
-			{
-				xCordinates[i] = rectangles[i].tl().x;
-				if (maxX < rectangles[i].tl().x)
-				{
-					maxX = rectangles[i].tl().x;
-					xind = i;
-				}
-
-				if (maxY < rectangles[i].tl().y)
-				{
-					maxY = rectangles[i].tl().y;
-					yind = i;
-				}
 
 
-				yCordinates[i] = rectangles[i].tl().y;
-			}
-
-			
-
-			//upperbody color
-			int Lb = maxColors[yind][0];
-			int Lg = maxColors[yind][1];
-			int Lr = maxColors[yind][2];
-
-			cout << "lower body color " << Lb << "," << Lg << "," << Lr << endl;
-			
-
-			Mat img(500,500,CV_8UC3);
-			img = cv::Scalar(Lr, Lg, Lb);
-			
-			imshow("Lowerbody ", img);
 			//end of detecting contours
 
 			//end of BGR values
 
 
 		
-	
-		/*
-			//try to extract body parts with head size
-			CascadeClassifier head_detection;
-			head_detection.load("D:/Visual_Studio_Workspace/opencv/New folder/sources/data/haarcascades/haarcascade_upperbody.xml");
-			vector<Rect> upperBody;
-			head_detection.detectMultiScale(crop, upperBody, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
-			for (int i = 0; i < upperBody.size(); i++)
-			{
-				Point center(upperBody[i].x + upperBody[i].width*0.5, upperBody[i].y + upperBody[i].height*0.5);
-				ellipse(crop, center, Size(upperBody[i].width*0.5, upperBody[i].height*0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
-			}
-			*/
-
-
 
 			//end of extracting
 
